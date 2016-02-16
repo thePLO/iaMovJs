@@ -1,0 +1,95 @@
+<html>
+ <head>
+ <script type="application/javascript">
+	var cursorX = 0;
+	var cursorY = 0;
+	var neiR = 15;
+	var agent = {
+		maxV:4,
+		maxF:0.2,
+		r:10,
+		p:{
+			x:20,
+			y:20
+		},
+		v:{
+			x:0,
+			y:0
+		}
+	};
+	
+	document.onmousemove = function(e){
+	    cursorX = e.pageX;
+	    cursorY = e.pageY;
+	}
+	var unitary= function(v){
+		var vU={x:0,y:0};
+		var module = Math.sqrt(Math.pow(v.x,2)+Math.pow(v.y,2));
+		vU.x = v.x/module;
+		vU.y = v.y/module;
+		return vU;
+	}
+	var seekMe = function(type){
+		var dV ={x:((cursorX)-agent.p.x),
+				 y:((cursorY)-agent.p.y)}
+		var dVI ={x:(agent.p.x-(cursorX)),
+				 y:(agent.p.y-(cursorY))}
+		var dM = Math.sqrt(Math.pow(dV.x,2)+Math.pow(dV.y,2));
+		//calculate v
+		if(type == 0) agent.v = unitary(dV);
+		else if(type == 1){
+			var steeringF = {x:dV.x-agent.v.x,y:dV.y-agent.v.y}
+			steeringF = unitary(steeringF);
+			steeringF = {x:steeringF.x*agent.maxF,y:steeringF.y*agent.maxF};
+			agent.v = {x:agent.v.x+steeringF.x,y:agent.v.y+steeringF.y};
+			agent.v = unitary(agent.v);
+		}
+		else if(type == 2){
+			var steeringF = {x:dVI.x-agent.v.x,y:dVI.y-agent.v.y}
+			steeringF = unitary(steeringF);
+			steeringF = {x:steeringF.x*agent.maxF,y:steeringF.y*agent.maxF};
+			agent.v = {x:agent.v.x+steeringF.x,y:agent.v.y+steeringF.y};
+			agent.v = unitary(agent.v);
+		}
+
+		//Xecute motion
+		agent.p.x += agent.v.x*agent.maxV;
+		agent.p.y += agent.v.y*agent.maxV;
+		if (agent.p.x>canvas.width) agent.p.x = 0;
+		if (agent.p.x<0) agent.p.x = canvas.width;
+		if (agent.p.y>canvas.height) agent.p.y = 0;
+		if (agent.p.y<0) agent.p.y = canvas.height;
+	}
+	var draw = function () {
+		var canvas = document.getElementById("canvas");
+		canvas.height = window.innerHeight;
+		canvas.width = window.innerWidth;
+		if (canvas.getContext) {
+	        var ctx = canvas.getContext("2d");
+	        ctx.beginPath();
+			ctx.arc(agent.p.x,agent.p.y,agent.r,0,2*Math.PI);
+			ctx.fillStyle = "rgb(200,0,0)";
+			ctx.fill();
+			ctx.beginPath();
+			ctx.arc(cursorX,cursorY,neiR,0,2*Math.PI);
+			ctx.fillStyle = "rgb(0,0,0)";
+			ctx.stroke();
+
+			ctx.beginPath();
+			ctx.moveTo(agent.p.x,agent.p.y);
+			ctx.lineTo(agent.p.x+agent.v.x*agent.maxV*60,agent.p.y+agent.v.y*agent.maxV*60);
+			ctx.stroke();
+		}		
+    }
+	var loop = function(){
+		seekMe(1);
+		draw();
+	}
+    setInterval(loop, 1000/60);
+  </script>
+  <link href="css.css" rel="stylesheet">
+ </head>
+ <body onload="loop();">
+   <canvas id="canvas" width="150" height="150"></canvas>
+ </body>
+</html>
