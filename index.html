@@ -7,14 +7,30 @@
 	var agent = {
 		maxV:4,
 		maxF:0.2,
+		actionRad:200,
+		wander:{
+			c:{
+				x:0,
+				y:0
+			},
+			//per debug
+			pointC:{
+				x:0,
+				y:0
+			},
+			o:200,
+			r:100,
+			a:90,
+			maxA:10,
+		},
 		r:10,
 		p:{
 			x:20,
 			y:20
 		},
 		v:{
-			x:0,
-			y:0
+			x:1,
+			y:1
 		}
 	};
 	
@@ -36,6 +52,8 @@
 				 y:(agent.p.y-(cursorY))}
 		var dM = Math.sqrt(Math.pow(dV.x,2)+Math.pow(dV.y,2));
 		//calculate v
+		var factorP = dM/agent.actionRad;
+
 		if(type == 0) agent.v = unitary(dV);
 		else if(type == 1){
 			var steeringF = {x:dV.x-agent.v.x,y:dV.y-agent.v.y}
@@ -51,10 +69,25 @@
 			agent.v = {x:agent.v.x+steeringF.x,y:agent.v.y+steeringF.y};
 			agent.v = unitary(agent.v);
 		}
+		else if(type == 3){
+			//update wander param
+			agent.wander.a += Math.random()*agent.wander.maxA;
+			agent.wander.c.x = agent.v.x*agent.wander.o;
+			agent.wander.c.y = agent.v.y*agent.wander.o;
+			agent.wander.pointC = {
+				x:agent.wander.c.x + (agent.wander.r*Math.cos(agent.wander.a)),
+				y:agent.wander.c.y + (agent.wander.r*Math.sin(agent.wander.a))
+			}
+			var steeringF = agent.wander.pointC;
+			steeringF = unitary(steeringF);
+			steeringF = {x:steeringF.x*agent.maxF,y:steeringF.y*agent.maxF};
+			agent.v = {x:agent.v.x+steeringF.x,y:agent.v.y+steeringF.y};
+			agent.v = unitary(agent.v);
+		}
 
 		//Xecute motion
-		agent.p.x += agent.v.x*agent.maxV;
-		agent.p.y += agent.v.y*agent.maxV;
+		agent.p.x += agent.v.x*agent.maxV/**factorP*/;
+		agent.p.y += agent.v.y*agent.maxV/**factorP*/;
 		if (agent.p.x>canvas.width) agent.p.x = 0;
 		if (agent.p.x<0) agent.p.x = canvas.width;
 		if (agent.p.y>canvas.height) agent.p.y = 0;
@@ -66,23 +99,16 @@
 		canvas.width = window.innerWidth;
 		if (canvas.getContext) {
 	        var ctx = canvas.getContext("2d");
-	        ctx.beginPath();
-			ctx.arc(agent.p.x,agent.p.y,agent.r,0,2*Math.PI);
-			ctx.fillStyle = "rgb(200,0,0)";
-			ctx.fill();
-			ctx.beginPath();
-			ctx.arc(cursorX,cursorY,neiR,0,2*Math.PI);
-			ctx.fillStyle = "rgb(0,0,0)";
-			ctx.stroke();
-
-			ctx.beginPath();
-			ctx.moveTo(agent.p.x,agent.p.y);
-			ctx.lineTo(agent.p.x+agent.v.x*agent.maxV*60,agent.p.y+agent.v.y*agent.maxV*60);
-			ctx.stroke();
+	        /*agent*/     ctx.beginPath(); ctx.arc(agent.p.x,agent.p.y,agent.r,0,2*Math.PI); ctx.fillStyle = "rgb(200,0,0)"; ctx.fill();
+			/*actionRad*/ //ctx.beginPath(); ctx.arc(agent.p.x,agent.p.y,agent.actionRad,0,2*Math.PI); ctx.stroke();
+			/*wander*/
+				/*circle*/	//ctx.beginPath(); ctx.arc(agent.p.x+agent.wander.c.x,agent.p.y+agent.wander.c.y,agent.wander.r,0,2*Math.PI); ctx.stroke();
+				/*point*/ 	//ctx.beginPath(); ctx.arc(agent.p.x+agent.wander.pointC.x,agent.p.y+agent.wander.pointC.y,5,0,2*Math.PI); ctx.fill();
+			/*agent.v*/   //ctx.beginPath(); ctx.moveTo(agent.p.x,agent.p.y); ctx.lineTo(agent.p.x+agent.v.x*agent.maxV*60,agent.p.y+agent.v.y*agent.maxV*60); ctx.stroke();
 		}		
     }
 	var loop = function(){
-		seekMe(1);
+		seekMe(3);
 		draw();
 	}
     setInterval(loop, 1000/60);
